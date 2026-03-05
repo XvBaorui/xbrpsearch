@@ -1,5 +1,5 @@
 import streamlit as st
-
+st.config.set_option("client.showErrorDetails", False)
 st.set_page_config(
     page_title="宝圈顶刊文献指引平台",
     page_icon="📚",
@@ -19,4 +19,5 @@ st.subheader("📄 文献结果展示区")
 st.info("基础框架已完成，功能可后续逐步扩展")
 
 st.divider()
+
 st.caption("© 2026 宝圈顶刊文献指引平台 | 精准检索 · 学术助手")
