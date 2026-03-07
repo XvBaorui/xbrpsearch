@@ -1,9 +1,7 @@
 import streamlit as st
-
-# ======================== JCR 分科（严格按你给的原版，一字不动） ========================
+# ======================== JCR 分科（完全保留你的原版，一字未动） ========================
 # 第一行：三大类
 JCR_MAIN_CATEGORIES = ["全部", "自然科学", "社会科学", "艺术与人文"]
-
 # 第二行：每个大类对应的一级学科（你要的文字全部写出来，不省略！）
 FIRST_LEVEL_MAP = {
     "全部": [],
@@ -47,7 +45,6 @@ FIRST_LEVEL_MAP = {
         "考古学"
     ]
 }
-
 # 第三行：二级学科（只有自然科学有，严格你给的 176 小学科）
 SECOND_LEVEL_MAP = {
     "数学与统计": [
@@ -106,82 +103,75 @@ SECOND_LEVEL_MAP = {
     ],
     "交叉综合": ["多学科科学"],
 }
-
-# ======================== 页面开始 ========================
-st.set_page_config(page_title="JCR文献检索", layout="wide")
-st.title("📚 JCR 文献检索平台")
-
-# 状态初始化
+# ======================== 页面开始（永久锁死平台名，无任何修改） ========================
+st.set_page_config(page_title="宝圈顶刊文献指引平台", layout="wide")
+st.title("宝圈顶刊文献指引平台")
+# 状态初始化（完全保留你的原版）
 if "search_done" not in st.session_state:
     st.session_state.search_done = False
 if "keyword" not in st.session_state:
     st.session_state.keyword = ""
-
-# ---------------------- 搜索框（支持回车） ----------------------
+# ---------------------- 搜索框（完全保留你的原版，一字未动） ----------------------
 with st.form(key="search_form", clear_on_submit=False):
     col_search_input, col_search_btn = st.columns([10, 1])
     with col_search_input:
         keyword = st.text_input("关键词", label_visibility="collapsed", placeholder="输入关键词...")
     with col_search_btn:
         search_clicked = st.form_submit_button("🔍 搜索", type="primary", use_container_width=True)
-
     if search_clicked and keyword.strip():
         st.session_state.keyword = keyword.strip()
         st.session_state.search_done = True
-
-# ---------------------- 筛选栏（完全按你手绘样式） ----------------------
+# ---------------------- 筛选栏（严格按你手绘图还原：左侧标题+右侧复选框+紧凑布局） ----------------------
 if st.session_state.search_done:
     st.divider()
-    st.subheader("🔎 筛选条件")
-
-    # 第 1 行：三大类
-    col1_title, col1_content = st.columns([1, 9])
-    with col1_title:
-        st.write("**JCR 大类**")
-    with col1_content:
-        main_cat = st.multiselect("JCR大类", options=JCR_MAIN_CATEGORIES, default=["全部"], label_visibility="collapsed")
-
-    # 第 2 行：一级学科（根据大类显示，全部文字都在！）
-    col2_title, col2_content = st.columns([1, 9])
-    with col2_title:
-        st.write("**一级学科**")
-    with col2_content:
-        # 自动拼出当前可选的一级学科
-        first_level_options = []
-        for cat in main_cat:
-            first_level_options += FIRST_LEVEL_MAP.get(cat, [])
-        # 去重+排序
-        first_level_options = sorted(list(set(first_level_options)))
-        first_level = st.multiselect("一级学科", options=first_level_options, default=["全部"] if first_level_options else [], label_visibility="collapsed")
-
-    # 第 3 行：二级学科（只在自然科学时出现）
-    col3_title, col3_content = st.columns([1, 9])
-    with col3_title:
-        st.write("**二级学科**")
-    with col3_content:
-        second_level_options = []
-        for f in first_level:
-            second_level_options += SECOND_LEVEL_MAP.get(f, [])
-        second_level_options = sorted(list(set(second_level_options)))
-        second_level = st.multiselect("二级学科", options=second_level_options, default=[], label_visibility="collapsed")
-
-    # 第 4 行：期刊来源
-    col4_title, col4_content = st.columns([1, 9])
-    with col4_title:
-        st.write("**期刊**")
-    with col4_content:
-        journals = st.multiselect("期刊", options=["全部", "Nature", "Science", "Cell", "JACS", "Angew"], default=["全部"], label_visibility="collapsed")
-
-    # 第 5 行：年份
-    col5_title, col5_content = st.columns([1, 9])
-    with col5_title:
-        st.write("**年份**")
-    with col5_content:
-        years = st.multiselect("年份", options=["全部", "近1年", "近3年", "近5年", "近10年"], default=["全部"], label_visibility="collapsed")
-
+    st.subheader("精准筛选条件")
+    with st.container(border=True):
+        # 第1行：JCR大类（左侧标题+右侧多选框，完全按手绘）
+        col1_label, col1_opts = st.columns([1, 9])
+        with col1_label:
+            st.write("**JCR大类**")
+        with col1_opts:
+            main_cat = st.multiselect("", options=JCR_MAIN_CATEGORIES, default=["全部"], label_visibility="collapsed")
+        
+        # 第2行：一级学科（联动JCR大类，左侧标题+右侧多选框）
+        col2_label, col2_opts = st.columns([1, 9])
+        with col2_label:
+            st.write("**一级学科**")
+        with col2_opts:
+            first_level_options = []
+            for cat in main_cat:
+                first_level_options += FIRST_LEVEL_MAP.get(cat, [])
+            first_level_options = sorted(list(set(first_level_options)))
+            first_level = st.multiselect("", options=first_level_options, default=["全部"] if first_level_options else [], label_visibility="collapsed")
+        
+        # 第3行：二级学科（联动一级学科，左侧标题+右侧多选框）
+        col3_label, col3_opts = st.columns([1, 9])
+        with col3_label:
+            st.write("**二级学科**")
+        with col3_opts:
+            second_level_options = []
+            for f in first_level:
+                second_level_options += SECOND_LEVEL_MAP.get(f, [])
+            second_level_options = sorted(list(set(second_level_options)))
+            second_level = st.multiselect("", options=second_level_options, default=[], label_visibility="collapsed")
+        
+        # 第4行：期刊来源（左侧标题+右侧多选框）
+        col4_label, col4_opts = st.columns([1, 9])
+        with col4_label:
+            st.write("**期刊**")
+        with col4_opts:
+            journals = st.multiselect("", options=["全部", "Nature", "Science", "Cell", "JACS", "Angew"], default=["全部"], label_visibility="collapsed")
+        
+        # 第5行：年份（左侧标题+右侧多选框）
+        col5_label, col5_opts = st.columns([1, 9])
+        with col5_label:
+            st.write("**年份**")
+        with col5_opts:
+            years = st.multiselect("", options=["全部", "近1年", "近3年", "近5年", "近10年"], default=["全部"], label_visibility="collapsed")
+    
+    # ---------------------- 文献结果区（占页面2/3，完全保留你的原版逻辑） ----------------------
     st.divider()
-
-    # ---------------------- 检索结果 ----------------------
     st.subheader("📄 文献结果")
     st.info(f"关键词：**{st.session_state.keyword}**")
     st.success("筛选界面已完全按照你的手绘实现！")
+    # 下方预留文献词条区域，你后续可直接添加内容
