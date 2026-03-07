@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ======================== 100% JCR官方原版分科数据（你给的，一字不改） ========================
+# ======================== 核心数据：100% JCR官方原版（你给的，一字不改） ========================
 # 学科门类（三大类）
 CATEGORY_MAIN = ["全部", "自然科学", "社会科学", "艺术与人文"]
 
@@ -21,7 +21,7 @@ FIRST_LEVEL = {
     ]
 }
 
-# 二级学科：100% 你提供的 JCR官方原版 Science 大类（一字不改）
+# 二级学科：仅自然科学下有（100%你给的JCR官方原版）
 SECOND_LEVEL = {
     "数学与统计": ["全部", "数学", "统计学与概率论", "运筹学"],
     "物理": [
@@ -77,7 +77,7 @@ SECOND_LEVEL = {
     "戏剧与影视": [], "考古学": []
 }
 
-# ======================== 页面配置与初始化 ========================
+# ======================== 页面配置 ========================
 st.set_page_config(page_title="宝圈顶刊文献指引平台", layout="wide")
 
 # 初始化页面状态
@@ -86,127 +86,122 @@ if "page" not in st.session_state:
 if "keyword" not in st.session_state:
     st.session_state.keyword = ""
 
-# ======================== 页面1：搜索页（100%还原你截图样式） ========================
+# ======================== 页面1：主页（100%还原你第一张图） ========================
 if st.session_state.page == "search":
-    # 永久锁死标题+副标题（和你截图一字不差）
-    st.title("宝圈顶刊文献指引平台")
-    st.subheader("专注顶刊文献精准检索与指引")
+    # 标题：中间显眼
+    st.markdown("<h1 style='text-align: center;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
+    # 副标题：右侧对齐
+    st.markdown("<h3 style='text-align: right; color: #8B0000;'>专注顶刊文献精准检索与指引</h3>", unsafe_allow_html=True)
     st.divider()
 
-    # 百度式搜索框：输入框+红色按钮并排
-    col1, col2, col3 = st.columns([3, 6, 1])
+    # 搜索框：左顶到头，右是红色「搜索」按钮，回车不搜索
+    col1, col2 = st.columns([8, 2])
     with col1:
-        st.write("")
-    with col2:
         keyword = st.text_input(
             "",
             placeholder="输入关键词进行精确检索",
             label_visibility="collapsed"
         )
-    with col3:
-        if st.button("开始精确检索", type="primary", use_container_width=True):
+    with col2:
+        st.write("")
+        st.write("")
+        if st.button("搜索", type="primary", use_container_width=True):
             if keyword.strip():
                 st.session_state.keyword = keyword.strip()
-                st.session_state.page = "results"
+                st.session_state.page = "filter"
                 st.rerun()
 
     st.divider()
 
-    # 文献结果提示区（和你截图一致）
+    # 文献结果提示区
     st.subheader("文献结果展示区")
-    st.info("输入关键词并点击「开始精确检索」，即可解锁完整筛选功能并查看相关顶刊文献")
+    st.info("输入关键词并点击「搜索」，即可解锁完整筛选功能并查看相关顶刊文献")
 
-# ======================== 页面2：结果筛选页（你要的任务3） ========================
-elif st.session_state.page == "results":
-    # 顶部返回按钮
-    if st.button("🔙 返回搜索"):
-        st.session_state.page = "search"
-        st.rerun()
+# ======================== 页面2：筛选页（100%还原你第二张图指令） ========================
+elif st.session_state.page == "filter":
+    # 左上角只留返回图标，最左上角
+    col_icon, _ = st.columns([1, 20])
+    with col_icon:
+        if st.button("↩", key="back"):
+            st.session_state.page = "search"
+            st.rerun()
 
-    # 标题+副标题
-    st.title("宝圈顶刊文献指引平台")
-    st.subheader("专注顶刊文献精准检索与指引")
     st.divider()
 
-    # 筛选区：学科门类→一级学科→二级学科（仅自然科学有二级）
-    st.subheader("筛选条件")
+    # 筛选区：横向排列，每个筛选项带「>」下拉（弹出层样式）
+    st.write("#### ")
 
     # 1. 学科门类
-    col1_label, col1_opts = st.columns([1, 9])
-    with col1_label:
+    col1, col2 = st.columns([1, 10])
+    with col1:
         st.write("**学科门类**")
-    with col1_opts:
+    with col2:
         main_cat = st.multiselect(
-            "学科门类筛选",
+            "学科门类",
             options=CATEGORY_MAIN,
             default=["全部"],
-            label_visibility="collapsed",
-            key="main_cat"
+            label_visibility="collapsed"
         )
 
     # 2. 一级学科（联动）
-    col2_label, col2_opts = st.columns([1, 9])
-    with col2_label:
+    col3, col4 = st.columns([1, 10])
+    with col3:
         st.write("**一级学科**")
-    with col2_opts:
-        first_level_options = []
-        for cat in main_cat:
-            first_level_options += FIRST_LEVEL.get(cat, [])
-        first_level_options = sorted(list(set(first_level_options)))
+    with col4:
+        first_opts = []
+        for c in main_cat:
+            first_opts += FIRST_LEVEL.get(c, [])
+        first_opts = sorted(list(set(first_opts)))
         first_level = st.multiselect(
-            "一级学科筛选",
-            options=first_level_options,
-            default=["全部"] if first_level_options else [],
-            label_visibility="collapsed",
-            key="first_level"
+            "一级学科",
+            options=first_opts,
+            default=["全部"] if first_opts else [],
+            label_visibility="collapsed"
         )
 
     # 3. 二级学科（仅自然科学下有）
-    col3_label, col3_opts = st.columns([1, 9])
-    with col3_label:
+    col5, col6 = st.columns([1, 10])
+    with col5:
         st.write("**二级学科**")
-    with col3_opts:
-        second_level_options = []
+    with col6:
+        second_opts = []
         for f in first_level:
-            second_level_options += SECOND_LEVEL.get(f, [])
-        second_level_options = sorted(list(set(second_level_options)))
+            second_opts += SECOND_LEVEL.get(f, [])
+        second_opts = sorted(list(set(second_opts)))
         second_level = st.multiselect(
-            "二级学科筛选",
-            options=second_level_options,
-            default=["全部"] if second_level_options else [],
-            label_visibility="collapsed",
-            key="second_level"
+            "二级学科",
+            options=second_opts,
+            default=["全部"] if second_opts else [],
+            label_visibility="collapsed"
         )
 
-    # 4. 期刊来源
-    col4_label, col4_opts = st.columns([1, 9])
-    with col4_label:
+    # 4. 期刊来源（预留）
+    col7, col8 = st.columns([1, 10])
+    with col7:
         st.write("**期刊来源**")
-    with col4_opts:
-        journals = st.multiselect(
-            "期刊来源筛选",
-            options=["全部", "JACS", "Angew", "Nature", "Science", "Cell"],
+    with col8:
+        st.multiselect(
+            "期刊来源",
+            options=["全部"],
             default=["全部"],
-            label_visibility="collapsed",
-            key="journals"
+            label_visibility="collapsed"
         )
 
-    # 5. 年份
-    col5_label, col5_opts = st.columns([1, 9])
-    with col5_label:
+    # 5. 发表年份
+    col9, col10 = st.columns([1, 10])
+    with col9:
         st.write("**发表年份**")
-    with col5_opts:
-        years = st.multiselect(
-            "年份筛选",
-            options=["全部", "近1年", "近3年", "近5年", "近10年"],
+    with col10:
+        st.multiselect(
+            "发表年份",
+            options=["全部", "近十年", "近5年", "近3年"],
             default=["全部"],
-            label_visibility="collapsed",
-            key="years"
+            label_visibility="collapsed"
         )
 
     st.divider()
 
-    # 文献结果区
+    # 文献结果区（预留空着）
     st.subheader("文献检索结果")
-    st.info(f"当前检索关键词：**{st.session_state.keyword}**")
-    st.success("筛选条件已应用，下方为匹配的文献列表")
+    st.info(f"当前检索关键词：{st.session_state.keyword}")
+    st.success("筛选条件已应用，文献结果将在此展示")
