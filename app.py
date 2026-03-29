@@ -1,10 +1,8 @@
 import streamlit as st
 
-# ======================== 核心数据：100% JCR官方原版（你给的，一字不改） ========================
-# 学科门类（三大类）
+# ======================== 核心数据：100% JCR官方原版（一字不改） ========================
 CATEGORY_MAIN = ["全部", "自然科学", "社会科学", "艺术与人文"]
 
-# 一级学科（JCR官方原版）
 FIRST_LEVEL = {
     "全部": [],
     "自然科学": [
@@ -21,7 +19,6 @@ FIRST_LEVEL = {
     ]
 }
 
-# 二级学科：仅自然科学下有（100%你给的JCR官方原版）
 SECOND_LEVEL = {
     "数学与统计": ["全部", "数学", "统计学与概率论", "运筹学"],
     "物理": [
@@ -70,20 +67,50 @@ SECOND_LEVEL = {
         "电信学", "自动化与控制系统", "仪器仪表", "核科学与技术", "能源与燃料", "热力学"
     ],
     "交叉综合": ["全部", "多学科科学"],
-    # 社会科学/艺术与人文无二级学科，留空
     "管理学": [], "经济学": [], "商学": [], "金融学": [], "社会学": [], "法学": [],
     "政治学": [], "国际关系": [], "心理学": [], "教育学": [], "传播学": [],
     "文学": [], "历史学": [], "哲学": [], "宗教学": [], "艺术学": [], "音乐": [],
     "戏剧与影视": [], "考古学": []
 }
 
-# ======================== 页面配置（核心修改1：隐藏管理应用按钮） ========================
-# 新增 menu_items=None 彻底隐藏右上角/右下角所有管理入口，同时设置页面标题和布局
+# ======================== 页面配置（核心修复：彻底隐藏管理按钮） ========================
+# 正确写法：menu_items={} 空字典，100%隐藏所有管理入口
 st.set_page_config(
     page_title="宝圈顶刊文献指引平台",
     layout="wide",
-    menu_items=None  # 🔴 关键：彻底隐藏所有管理按钮，包括右下角「管理应用」
+    menu_items={},  # 🔴 关键修复：之前None不生效，空字典才是正确写法
+    initial_sidebar_state="collapsed"
 )
+
+# 全局CSS：统一拉高输入框/按钮高度，强制对齐
+st.markdown("""
+<style>
+/* 全局拉高输入框高度，告别细长 */
+.stTextInput > div > div > input {
+    height: 3.2rem !important;
+    font-size: 1rem !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.375rem !important;
+}
+/* 全局按钮高度，和输入框完全对齐 */
+.stButton > button {
+    height: 3.2rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.375rem !important;
+    background-color: #ff4b4b !important;
+    border: none !important;
+    color: white !important;
+}
+.stButton > button:hover {
+    background-color: #ff3333 !important;
+}
+/* 隐藏右下角管理应用按钮（兜底） */
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # 初始化页面状态
 if "page" not in st.session_state:
@@ -91,53 +118,23 @@ if "page" not in st.session_state:
 if "keyword" not in st.session_state:
     st.session_state.keyword = ""
 
-# ======================== 页面1：主页（核心修改2：搜索框上移+拉高+对齐） ========================
+# ======================== 页面1：主页（核心修复：搜索框上移+完全对齐） ========================
 if st.session_state.page == "search":
-    # 标题：中间显眼
-    st.markdown("<h1 style='text-align: center; margin-bottom: 0.5rem;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
-    # 副标题：右侧对齐
-    st.markdown("<h3 style='text-align: right; color: #8B0000; margin-top: 0; margin-bottom: 1.5rem;'>专注顶刊文献精准检索与指引</h3>", unsafe_allow_html=True)
+    # 标题上移，减少间距
+    st.markdown("<h1 style='text-align: center; margin-bottom: 0.3rem;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: right; color: #8B0000; margin-top: 0; margin-bottom: 1rem;'>专注顶刊文献精准检索与指引</h3>", unsafe_allow_html=True)
     st.divider()
 
-    # 🔴 核心修改：调整列比例+内边距，让搜索框上移、左右同高、拉高高度
-    # 列比例从 [8,2] 调整为 [7,3]，更适配拉高后的按钮
-    col1, col2 = st.columns([7, 3])
+    # 搜索框布局：强制同高、上移、对齐
+    col1, col2 = st.columns([7, 3], gap="small")
     with col1:
-        # 用 st.markdown 自定义输入框高度，告别细长感
-        st.markdown(
-            """
-            <style>
-            /* 自定义输入框高度，拉高到更舒适的尺寸 */
-            .stTextInput > div > div > input {
-                height: 3rem !important;
-                font-size: 1rem !important;
-                padding: 0.75rem 1rem !important;
-                border-radius: 0.375rem !important;
-            }
-            /* 自定义按钮高度，和输入框完全对齐 */
-            .stButton > button {
-                height: 3rem !important;
-                font-size: 1.1rem !important;
-                font-weight: 600 !important;
-                border-radius: 0.375rem !important;
-                background-color: #ff4b4b !important;
-                border: none !important;
-            }
-            .stButton > button:hover {
-                background-color: #ff3333 !important;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
         keyword = st.text_input(
             "",
             placeholder="输入关键词进行精确检索",
             label_visibility="collapsed"
         )
     with col2:
-        # 用空行调整垂直位置，让按钮和输入框完全居中对齐
-        st.write("")
+        # 用空行精准对齐，确保按钮和输入框完全在同一水平线
         st.write("")
         if st.button("搜索", type="primary", use_container_width=True):
             if keyword.strip():
@@ -151,9 +148,9 @@ if st.session_state.page == "search":
     st.subheader("文献结果展示区")
     st.info("输入关键词并点击「搜索」，即可解锁完整筛选功能并查看相关顶刊文献")
 
-# ======================== 页面2：筛选页（100%保留原有功能，无修改） ========================
+# ======================== 页面2：筛选页（100%保留原有功能） ========================
 elif st.session_state.page == "filter":
-    # 左上角只留返回图标，最左上角
+    # 左上角返回按钮
     col_icon, _ = st.columns([1, 20])
     with col_icon:
         if st.button("↩", key="back"):
@@ -162,7 +159,7 @@ elif st.session_state.page == "filter":
 
     st.divider()
 
-    # 筛选区：横向排列，每个筛选项带「>」下拉（弹出层样式）
+    # 筛选区
     st.write("#### ")
 
     # 1. 学科门类
@@ -224,7 +221,7 @@ elif st.session_state.page == "filter":
     # 5. 发表年份
     col9, col10 = st.columns([1, 10])
     with col9:
-        st.we("**发表年份**")
+        st.write("**发表年份**")
     with col10:
         st.multiselect(
             "发表年份",
@@ -235,7 +232,7 @@ elif st.session_state.page == "filter":
 
     st.divider()
 
-    # 文献结果区（预留空着）
+    # 文献结果区
     st.subheader("文献检索结果")
     st.info(f"当前检索关键词：{st.session_state.keyword}")
     st.success("筛选条件已应用，文献结果将在此展示")
