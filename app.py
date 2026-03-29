@@ -30,14 +30,12 @@ html, body {
     font-weight: bold;
     text-align: center;
 }
-/* 搜索框 */
-.search-input input {
+/* 搜索框与按钮强制同高对齐 */
+.stTextInput>div>div>input {
     height: 3rem !important;
-    font-size: 1rem !important;
 }
-.search-btn button {
+.stButton>button {
     height: 3rem !important;
-    font-size: 1.1rem !important;
     background-color: #d93025 !important;
     color: white !important;
     border: none;
@@ -49,7 +47,7 @@ html, body {
 
 # ====================== 会话状态初始化 ======================
 if "users" not in st.session_state:
-    st.session_state.users = {}  # {username: {"pwd":..., "profile":...}}
+    st.session_state.users = {}
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -60,7 +58,7 @@ if "need_profile" not in st.session_state:
 if "search_keyword" not in st.session_state:
     st.session_state.search_keyword = ""
 if "page" not in st.session_state:
-    st.session_state.page = "auth"  # auth, profile, home, search
+    st.session_state.page = "auth"
 
 # ====================== 学科联动数据 ======================
 SUBJECT_MAP = {
@@ -181,19 +179,15 @@ def page_profile():
 
 # ====================== 页面3：主页（搜索页） ======================
 def page_home():
-    # 标题
     st.markdown("<h1 style='text-align:center; font-weight:bold;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:right; color:#d93025; margin-bottom:2rem;'>专注顶刊文献精确检索与指引</h3>", unsafe_allow_html=True)
 
-    # 搜索栏（支持回车）
     col1, col2 = st.columns([9, 2])
     with col1:
         keyword = st.text_input("", placeholder="输入关键词检索文献", label_visibility="collapsed", key="search_input")
     with col2:
-        st.write("")
         search_clicked = st.button("搜索", type="primary", use_container_width=True)
 
-    # 触发搜索：按钮 或 回车
     if (search_clicked or st.session_state.get("search_input")) and keyword.strip():
         st.session_state.search_keyword = keyword.strip()
         st.session_state.page = "search_result"
@@ -204,10 +198,8 @@ def page_home():
 
 # ====================== 页面4：搜索结果+筛选 ======================
 def page_search_result():
-    st.markdown(f"<h3 style='margin-bottom:1rem;'>检索关键词：{st.session_state.search_keyword}</h3>", unsafe_allow_html=True)
-    st.divider()
-
-    st.subheader("筛选条件")
+    # 【你要求的修改：删除顶部关键词，标题改成带括号，并置顶】
+    st.subheader(f"筛选条件（检索关键词：{st.session_state.search_keyword}）")
 
     # 一级学科
     col_l1, col_r1 = st.columns([1, 11])
@@ -241,7 +233,6 @@ def page_search_result():
     st.subheader("文献检索结果")
     st.info("文献数据待导入，此处将展示标题、作者、期刊、年份、摘要、链接等信息")
 
-    # 返回
     if st.button("← 返回搜索页"):
         st.session_state.page = "home"
         st.rerun()
