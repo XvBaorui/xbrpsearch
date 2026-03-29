@@ -1,238 +1,259 @@
 import streamlit as st
+import re
+from datetime import datetime
 
-# ======================== 核心数据：100% JCR官方原版（一字不改） ========================
-CATEGORY_MAIN = ["全部", "自然科学", "社会科学", "艺术与人文"]
-
-FIRST_LEVEL = {
-    "全部": [],
-    "自然科学": [
-        "全部", "数学与统计", "物理", "化学", "生物与生化", "地球科学",
-        "农业与食品", "医学", "工程类", "材料科学", "计算机、能源、仪器", "交叉综合"
-    ],
-    "社会科学": [
-        "全部", "管理学", "经济学", "商学", "金融学", "社会学", "法学",
-        "政治学", "国际关系", "心理学", "教育学", "传播学"
-    ],
-    "艺术与人文": [
-        "全部", "文学", "历史学", "哲学", "宗教学", "艺术学", "音乐",
-        "戏剧与影视", "考古学"
-    ]
-}
-
-SECOND_LEVEL = {
-    "数学与统计": ["全部", "数学", "统计学与概率论", "运筹学"],
-    "物理": [
-        "全部", "物理，综合", "应用物理", "原子、分子与化学物理",
-        "凝聚态物理", "流体与等离子体物理", "数学物理", "粒子与场物理",
-        "天文学与天体物理学", "光学"
-    ],
-    "化学": [
-        "全部", "化学，综合", "应用化学", "分析化学", "无机与核化学",
-        "有机化学", "物理化学", "高分子科学"
-    ],
-    "生物与生化": [
-        "全部", "生物化学与分子生物学", "生物物理学", "细胞生物学", "发育生物学",
-        "生态学", "昆虫学", "进化生物学", "遗传学与遗传", "微生物学",
-        "真菌学", "神经科学", "生理学", "植物科学", "动物学"
-    ],
-    "地球科学": [
-        "全部", "环境科学", "环境工程", "地球科学，综合", "地球化学与地球物理学",
-        "地质学", "气象学与大气科学", "海洋学", "古生物学", "遥感", "水资源"
-    ],
-    "农业与食品": [
-        "全部", "农业，乳品与动物科学", "农业，综合", "农艺学", "园艺学",
-        "土壤科学", "渔业", "林学", "食品科学与技术", "兽医学"
-    ],
-    "医学": [
-        "全部", "医学，综合与内科", "心脏与心血管系统", "危重症医学", "皮肤病学",
-        "急诊医学", "内分泌学与代谢", "胃肠病学与肝病学", "老年病学与老年医学",
-        "感染性疾病", "医学实验技术", "肾脏病学", "神经病学", "神经外科",
-        "妇产科学", "肿瘤学", "眼科学", "骨科", "耳鼻喉科学", "病理学",
-        "儿科学", "药理学与药学", "物理治疗", "精神病学", "公共卫生、环境与职业卫生",
-        "放射医学、核医学与医学成像", "康复医学", "呼吸系统", "风湿病学",
-        "外科学", "移植", "泌尿科学"
-    ],
-    "工程类": [
-        "全部", "工程，综合", "航空航天工程", "生物医学工程", "化学工程", "土木工程",
-        "电气与电子工程", "环境工程", "地质工程", "工业工程", "海洋工程",
-        "机械工程", "矿业工程", "石油工程", "物理工程", "运输科学与技术"
-    ],
-    "材料科学": [
-        "全部", "材料科学，综合", "生物材料", "陶瓷材料", "材料表征与测试",
-        "涂层与薄膜材料", "复合材料", "造纸与木材材料", "纺织材料", "冶金与冶金工程"
-    ],
-    "计算机、能源、仪器": [
-        "全部", "计算机科学，人工智能", "计算机科学，控制论", "计算机科学，信息系统",
-        "计算机科学，交叉应用", "计算机科学，软件工程", "计算机科学，理论与方法",
-        "电信学", "自动化与控制系统", "仪器仪表", "核科学与技术", "能源与燃料", "热力学"
-    ],
-    "交叉综合": ["全部", "多学科科学"],
-    "管理学": [], "经济学": [], "商学": [], "金融学": [], "社会学": [], "法学": [],
-    "政治学": [], "国际关系": [], "心理学": [], "教育学": [], "传播学": [],
-    "文学": [], "历史学": [], "哲学": [], "宗教学": [], "艺术学": [], "音乐": [],
-    "戏剧与影视": [], "考古学": []
-}
-
-# ======================== 页面配置（核心修复：彻底隐藏管理按钮） ========================
-# 正确写法：menu_items={} 空字典，100%隐藏所有管理入口
+# ====================== 全局配置 ======================
 st.set_page_config(
     page_title="宝圈顶刊文献指引平台",
     layout="wide",
-    menu_items={},  # 🔴 关键修复：之前None不生效，空字典才是正确写法
+    menu_items={},
     initial_sidebar_state="collapsed"
 )
 
-# 全局CSS：统一拉高输入框/按钮高度，强制对齐
+# 全局样式（简约学术风、全端适配、仿知网/百度）
 st.markdown("""
 <style>
-/* 全局拉高输入框高度，告别细长 */
-.stTextInput > div > div > input {
-    height: 3.2rem !important;
+html, body {
+    font-family: "Microsoft YaHei", sans-serif;
+    background-color: #f9f9f9;
+}
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+/* 筛选栏左侧标题样式 */
+.filter-label {
+    background-color: #333;
+    color: white;
+    padding: 0.6rem 1rem;
+    border-radius: 0.3rem;
+    font-weight: bold;
+    text-align: center;
+}
+/* 搜索框 */
+.search-input input {
+    height: 3rem !important;
     font-size: 1rem !important;
-    padding: 0.75rem 1rem !important;
-    border-radius: 0.375rem !important;
 }
-/* 全局按钮高度，和输入框完全对齐 */
-.stButton > button {
-    height: 3.2rem !important;
+.search-btn button {
+    height: 3rem !important;
     font-size: 1.1rem !important;
-    font-weight: 600 !important;
-    border-radius: 0.375rem !important;
-    background-color: #ff4b4b !important;
-    border: none !important;
+    background-color: #d93025 !important;
     color: white !important;
+    border: none;
 }
-.stButton > button:hover {
-    background-color: #ff3333 !important;
-}
-/* 隐藏右下角管理应用按钮（兜底） */
-[data-testid="stToolbar"] {
-    display: none !important;
-}
+/* 隐藏右下角工具栏 */
+[data-testid="stToolbar"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
-# 初始化页面状态
+# ====================== 会话状态初始化 ======================
+if "users" not in st.session_state:
+    st.session_state.users = {}  # {username: {"pwd":..., "profile":...}}
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "current_user" not in st.session_state:
+    st.session_state.current_user = None
+if "need_profile" not in st.session_state:
+    st.session_state.need_profile = False
+if "search_keyword" not in st.session_state:
+    st.session_state.search_keyword = ""
 if "page" not in st.session_state:
-    st.session_state.page = "search"
-if "keyword" not in st.session_state:
-    st.session_state.keyword = ""
+    st.session_state.page = "auth"  # auth, profile, home, search
 
-# ======================== 页面1：主页（核心修复：搜索框上移+完全对齐） ========================
-if st.session_state.page == "search":
-    # 标题上移，减少间距
-    st.markdown("<h1 style='text-align: center; margin-bottom: 0.3rem;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: right; color: #8B0000; margin-top: 0; margin-bottom: 1rem;'>专注顶刊文献精准检索与指引</h3>", unsafe_allow_html=True)
-    st.divider()
+# ====================== 学科联动数据 ======================
+SUBJECT_MAP = {
+    "化学类": [
+        "化学·综合", "应用化学", "分析化学", "无机与核化学", "有机化学",
+        "物理化学", "高分子科学", "电化学", "光谱学", "晶体学"
+    ],
+    "生物与生化类": [
+        "生物化学与分子生物学", "生物物理学", "细胞生物学", "发育生物学",
+        "生态学", "昆虫学", "进化生物学", "遗传学与遗传", "微生物学",
+        "真菌学", "神经科学", "生理学", "植物科学", "动物学", "生物学",
+        "生物多样性保护", "海洋与淡水生物学", "鸟类学", "寄生虫学",
+        "病毒学", "生殖生物学", "生化研究方法", "生物技术与应用微生物学"
+    ],
+    "农业与食品类": [
+        "农业·综合", "农业·乳品与动物科学", "农艺学", "园艺学", "土壤科学",
+        "渔业", "林学", "食品科学与技术", "兽医学", "农业经济与政策",
+        "农业工程", "绿色与可持续科学技术"
+    ],
+    "工程类": [
+        "工程·综合", "航空航天工程", "生物医学工程", "化学工程", "土木工程",
+        "电气与电子工程", "环境工程", "地质工程", "工业工程", "海洋工程",
+        "机械工程", "矿业工程", "石油工程", "物理工程", "运输科学与技术"
+    ],
+    "材料科学类": [
+        "材料科学·综合", "生物材料", "陶瓷材料", "材料表征与测试",
+        "涂层与薄膜材料", "复合材料", "造纸与木材材料", "纺织材料",
+        "冶金与冶金工程"
+    ]
+}
 
-    # 搜索框布局：强制同高、上移、对齐
-    col1, col2 = st.columns([7, 3], gap="small")
-    with col1:
-        keyword = st.text_input(
-            "",
-            placeholder="输入关键词进行精确检索",
-            label_visibility="collapsed"
-        )
-    with col2:
-        # 用空行精准对齐，确保按钮和输入框完全在同一水平线
-        st.write("")
-        if st.button("搜索", type="primary", use_container_width=True):
-            if keyword.strip():
-                st.session_state.keyword = keyword.strip()
-                st.session_state.page = "filter"
+# ====================== 工具函数 ======================
+def check_username_format(s):
+    return re.fullmatch(r"^[A-Za-z0-9]+$", s) is not None
+
+def check_pwd_format(s):
+    return re.fullmatch(r"^[A-Za-z0-9]+$", s) is not None
+
+# ====================== 页面1：登录/注册 ======================
+def page_auth():
+    st.title("用户登录 / 注册")
+    tab1, tab2 = st.tabs(["登录", "注册"])
+
+    with tab1:
+        username = st.text_input("账号（字母+数字）", key="login_user")
+        pwd = st.text_input("密码", type="password", key="login_pwd")
+        if st.button("登录"):
+            if not username or not pwd:
+                st.warning("请输入账号和密码")
+            elif username not in st.session_state.users:
+                st.error("账号不存在")
+            elif st.session_state.users[username]["pwd"] != pwd:
+                st.error("密码错误")
+            else:
+                st.session_state.logged_in = True
+                st.session_state.current_user = username
+                profile = st.session_state.users[username].get("profile", None)
+                if profile is None:
+                    st.session_state.need_profile = True
+                    st.session_state.page = "profile"
+                else:
+                    st.session_state.page = "home"
                 st.rerun()
 
-    st.divider()
+    with tab2:
+        new_user = st.text_input("设置账号（字母+数字）", key="reg_user")
+        new_pwd = st.text_input("设置密码（字母+数字）", type="password", key="reg_pwd")
+        confirm_pwd = st.text_input("确认密码", type="password", key="reg_cfm")
+        if st.button("注册"):
+            if not check_username_format(new_user):
+                st.warning("账号只能包含大小写字母和数字")
+            elif not check_pwd_format(new_pwd):
+                st.warning("密码只能包含大小写字母和数字")
+            elif new_pwd != confirm_pwd:
+                st.error("两次密码不一致")
+            elif new_user in st.session_state.users:
+                st.error("账号已存在")
+            else:
+                st.session_state.users[new_user] = {
+                    "pwd": new_pwd,
+                    "profile": None
+                }
+                st.success("注册成功！请完善资料")
+                st.session_state.logged_in = True
+                st.session_state.current_user = new_user
+                st.session_state.need_profile = True
+                st.session_state.page = "profile"
+                st.rerun()
 
-    # 文献结果提示区
-    st.subheader("文献结果展示区")
-    st.info("输入关键词并点击「搜索」，即可解锁完整筛选功能并查看相关顶刊文献")
+# ====================== 页面2：完善资料 ======================
+def page_profile():
+    st.title("完善个人资料")
+    st.markdown("⚠️ 昵称与头像为必填项")
 
-# ======================== 页面2：筛选页（100%保留原有功能） ========================
-elif st.session_state.page == "filter":
-    # 左上角返回按钮
-    col_icon, _ = st.columns([1, 20])
-    with col_icon:
-        if st.button("↩", key="back"):
-            st.session_state.page = "search"
+    nickname = st.text_input("昵称（必填）")
+    avatar = st.file_uploader("上传头像（必填，仅图片）", type=["png","jpg","jpeg"])
+    unit = st.text_input("工作单位（选填）")
+    birthday = st.date_input("出生年月日（选填）", min_value=datetime(1940,1,1))
+    tags = st.multiselect("感兴趣的学科标签（选填，可多选）", list(SUBJECT_MAP.keys()))
+
+    if st.button("提交资料"):
+        if not nickname:
+            st.warning("请填写昵称")
+        elif avatar is None:
+            st.warning("请上传头像")
+        else:
+            st.session_state.users[st.session_state.current_user]["profile"] = {
+                "nickname": nickname,
+                "avatar": avatar.name if avatar else None,
+                "unit": unit,
+                "birthday": str(birthday),
+                "tags": tags
+            }
+            st.session_state.need_profile = False
+            st.session_state.page = "home"
+            st.success("资料完善成功，进入平台")
             st.rerun()
 
-    st.divider()
+# ====================== 页面3：主页（搜索页） ======================
+def page_home():
+    # 标题
+    st.markdown("<h1 style='text-align:center; font-weight:bold;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:right; color:#d93025; margin-bottom:2rem;'>专注顶刊文献精确检索与指引</h3>", unsafe_allow_html=True)
 
-    # 筛选区
-    st.write("#### ")
-
-    # 1. 学科门类
-    col1, col2 = st.columns([1, 10])
+    # 搜索栏（支持回车）
+    col1, col2 = st.columns([9, 2])
     with col1:
-        st.write("**学科门类**")
+        keyword = st.text_input("", placeholder="输入关键词检索文献", label_visibility="collapsed", key="search_input")
     with col2:
-        main_cat = st.multiselect(
-            "学科门类",
-            options=CATEGORY_MAIN,
-            default=["全部"],
-            label_visibility="collapsed"
-        )
+        st.write("")
+        search_clicked = st.button("搜索", type="primary", use_container_width=True)
 
-    # 2. 一级学科（联动）
-    col3, col4 = st.columns([1, 10])
-    with col3:
-        st.write("**一级学科**")
-    with col4:
-        first_opts = []
-        for c in main_cat:
-            first_opts += FIRST_LEVEL.get(c, [])
-        first_opts = sorted(list(set(first_opts)))
-        first_level = st.multiselect(
-            "一级学科",
-            options=first_opts,
-            default=["全部"] if first_opts else [],
-            label_visibility="collapsed"
-        )
-
-    # 3. 二级学科（仅自然科学下有）
-    col5, col6 = st.columns([1, 10])
-    with col5:
-        st.write("**二级学科**")
-    with col6:
-        second_opts = []
-        for f in first_level:
-            second_opts += SECOND_LEVEL.get(f, [])
-        second_opts = sorted(list(set(second_opts)))
-        second_level = st.multiselect(
-            "二级学科",
-            options=second_opts,
-            default=["全部"] if second_opts else [],
-            label_visibility="collapsed"
-        )
-
-    # 4. 期刊来源（预留）
-    col7, col8 = st.columns([1, 10])
-    with col7:
-        st.write("**期刊来源**")
-    with col8:
-        st.multiselect(
-            "期刊来源",
-            options=["全部"],
-            default=["全部"],
-            label_visibility="collapsed"
-        )
-
-    # 5. 发表年份
-    col9, col10 = st.columns([1, 10])
-    with col9:
-        st.write("**发表年份**")
-    with col10:
-        st.multiselect(
-            "发表年份",
-            options=["全部", "近十年", "近5年", "近3年"],
-            default=["全部"],
-            label_visibility="collapsed"
-        )
+    # 触发搜索：按钮 或 回车
+    if (search_clicked or st.session_state.get("search_input")) and keyword.strip():
+        st.session_state.search_keyword = keyword.strip()
+        st.session_state.page = "search_result"
+        st.rerun()
 
     st.divider()
+    st.info("输入关键词后点击搜索或按回车，即可进入检索筛选页面")
 
-    # 文献结果区
+# ====================== 页面4：搜索结果+筛选 ======================
+def page_search_result():
+    st.markdown(f"<h3 style='margin-bottom:1rem;'>检索关键词：{st.session_state.search_keyword}</h3>", unsafe_allow_html=True)
+    st.divider()
+
+    st.subheader("筛选条件")
+
+    # 一级学科
+    col_l1, col_r1 = st.columns([1, 11])
+    with col_l1:
+        st.markdown('<div class="filter-label">一级学科</div>', unsafe_allow_html=True)
+    with col_r1:
+        first_opts = ["全部"] + list(SUBJECT_MAP.keys())
+        selected_first = st.multiselect("", first_opts, default=["全部"], label_visibility="collapsed", key="first")
+
+    # 二级学科（联动）
+    col_l2, col_r2 = st.columns([1, 11])
+    with col_l2:
+        st.markdown('<div class="filter-label">二级学科</div>', unsafe_allow_html=True)
+    with col_r2:
+        second_list = ["全部"]
+        if "全部" not in selected_first:
+            for cat in selected_first:
+                second_list += SUBJECT_MAP.get(cat, [])
+        second_list = sorted(list(set(second_list)))
+        st.multiselect("", second_list, default=["全部"], label_visibility="collapsed", key="second")
+
+    # 年份
+    col_l3, col_r3 = st.columns([1, 11])
+    with col_l3:
+        st.markdown('<div class="filter-label">发表年份</div>', unsafe_allow_html=True)
+    with col_r3:
+        year_opts = ["全部", "近3年", "近5年", "近10年"]
+        st.multiselect("", year_opts, default=["全部"], label_visibility="collapsed", key="year")
+
+    st.divider()
     st.subheader("文献检索结果")
-    st.info(f"当前检索关键词：{st.session_state.keyword}")
-    st.success("筛选条件已应用，文献结果将在此展示")
+    st.info("文献数据待导入，此处将展示标题、作者、期刊、年份、摘要、链接等信息")
+
+    # 返回
+    if st.button("← 返回搜索页"):
+        st.session_state.page = "home"
+        st.rerun()
+
+# ====================== 路由 ======================
+if not st.session_state.logged_in:
+    page_auth()
+else:
+    if st.session_state.need_profile:
+        page_profile()
+    else:
+        if st.session_state.page == "home":
+            page_home()
+        elif st.session_state.page == "search_result":
+            page_search_result()
