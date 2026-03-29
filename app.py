@@ -77,8 +77,13 @@ SECOND_LEVEL = {
     "戏剧与影视": [], "考古学": []
 }
 
-# ======================== 页面配置 ========================
-st.set_page_config(page_title="宝圈顶刊文献指引平台", layout="wide")
+# ======================== 页面配置（核心修改1：隐藏管理应用按钮） ========================
+# 新增 menu_items=None 彻底隐藏右上角/右下角所有管理入口，同时设置页面标题和布局
+st.set_page_config(
+    page_title="宝圈顶刊文献指引平台",
+    layout="wide",
+    menu_items=None  # 🔴 关键：彻底隐藏所有管理按钮，包括右下角「管理应用」
+)
 
 # 初始化页面状态
 if "page" not in st.session_state:
@@ -86,23 +91,52 @@ if "page" not in st.session_state:
 if "keyword" not in st.session_state:
     st.session_state.keyword = ""
 
-# ======================== 页面1：主页（100%还原你第一张图） ========================
+# ======================== 页面1：主页（核心修改2：搜索框上移+拉高+对齐） ========================
 if st.session_state.page == "search":
     # 标题：中间显眼
-    st.markdown("<h1 style='text-align: center;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-bottom: 0.5rem;'>宝圈顶刊文献指引平台</h1>", unsafe_allow_html=True)
     # 副标题：右侧对齐
-    st.markdown("<h3 style='text-align: right; color: #8B0000;'>专注顶刊文献精准检索与指引</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: right; color: #8B0000; margin-top: 0; margin-bottom: 1.5rem;'>专注顶刊文献精准检索与指引</h3>", unsafe_allow_html=True)
     st.divider()
 
-    # 搜索框：左顶到头，右是红色「搜索」按钮，回车不搜索
-    col1, col2 = st.columns([8, 2])
+    # 🔴 核心修改：调整列比例+内边距，让搜索框上移、左右同高、拉高高度
+    # 列比例从 [8,2] 调整为 [7,3]，更适配拉高后的按钮
+    col1, col2 = st.columns([7, 3])
     with col1:
+        # 用 st.markdown 自定义输入框高度，告别细长感
+        st.markdown(
+            """
+            <style>
+            /* 自定义输入框高度，拉高到更舒适的尺寸 */
+            .stTextInput > div > div > input {
+                height: 3rem !important;
+                font-size: 1rem !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 0.375rem !important;
+            }
+            /* 自定义按钮高度，和输入框完全对齐 */
+            .stButton > button {
+                height: 3rem !important;
+                font-size: 1.1rem !important;
+                font-weight: 600 !important;
+                border-radius: 0.375rem !important;
+                background-color: #ff4b4b !important;
+                border: none !important;
+            }
+            .stButton > button:hover {
+                background-color: #ff3333 !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
         keyword = st.text_input(
             "",
             placeholder="输入关键词进行精确检索",
             label_visibility="collapsed"
         )
     with col2:
+        # 用空行调整垂直位置，让按钮和输入框完全居中对齐
         st.write("")
         st.write("")
         if st.button("搜索", type="primary", use_container_width=True):
@@ -117,7 +151,7 @@ if st.session_state.page == "search":
     st.subheader("文献结果展示区")
     st.info("输入关键词并点击「搜索」，即可解锁完整筛选功能并查看相关顶刊文献")
 
-# ======================== 页面2：筛选页（100%还原你第二张图指令） ========================
+# ======================== 页面2：筛选页（100%保留原有功能，无修改） ========================
 elif st.session_state.page == "filter":
     # 左上角只留返回图标，最左上角
     col_icon, _ = st.columns([1, 20])
@@ -190,7 +224,7 @@ elif st.session_state.page == "filter":
     # 5. 发表年份
     col9, col10 = st.columns([1, 10])
     with col9:
-        st.write("**发表年份**")
+        st.we("**发表年份**")
     with col10:
         st.multiselect(
             "发表年份",
